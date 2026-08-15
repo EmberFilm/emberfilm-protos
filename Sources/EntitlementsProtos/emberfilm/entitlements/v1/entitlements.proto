@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package emberfilm.entitlements.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service EntitlementService {
+  rpc ClaimEntitlement(ClaimEntitlementRequest) returns (Entitlement);
+  rpc GetEntitlementBySourceID(GetEntitlementBySourceIDRequest) returns (Entitlement);
+  rpc ListEntitlements(ListEntitlementsRequest) returns (ListEntitlementsResponse);
+  rpc ListEntitlementDevices(ListEntitlementDevicesRequest) returns (ListEntitlementDevicesResponse);
+  rpc UnenrollDevice(UnenrollDeviceRequest) returns (google.protobuf.Empty);
+  rpc DeleteDevice(DeleteDeviceRequest) returns (google.protobuf.Empty);
+  rpc UpsertEntitlement(UpsertEntitlementRequest) returns (Entitlement);
+  rpc DeleteEntitlement(DeleteEntitlementRequest) returns (google.protobuf.Empty);
+}
+
+enum EntitlementType {
+  ENTITLEMENT_TYPE_UNSPECIFIED = 0;
+  ENTITLEMENT_TYPE_LICENSE = 1;
+  ENTITLEMENT_TYPE_SUBSCRIPTION = 2;
+}
+
+message Entitlement {
+  string id = 1;
+  string user_id = 2;
+  EntitlementType type = 3;
+  string title = 4;
+  string source_id = 5;
+  optional int64 version = 6;
+  google.protobuf.Timestamp start_date = 7;
+  google.protobuf.Timestamp end_date = 8;
+  google.protobuf.Timestamp cancellation_date = 9;
+  optional bool is_trial = 10;
+  int32 allowed_devices = 11;
+  google.protobuf.Timestamp creation_date = 12;
+  google.protobuf.Timestamp update_date = 13;
+}
+
+message Device {
+  string id = 1;
+  string user_id = 2;
+  string hardware_identifier = 3;
+  string name = 4;
+  string platform = 5;
+  google.protobuf.Timestamp creation_date = 6;
+  google.protobuf.Timestamp update_date = 7;
+}
+
+message ClaimEntitlementRequest {
+  string user_id = 1;
+  string device_id = 2;
+  string name = 3;
+  string platform = 4;
+  int64 major_version = 5;
+}
+
+message GetEntitlementBySourceIDRequest {
+  string source_id = 1;
+}
+
+message ListEntitlementsRequest {
+  string user_id = 1;
+}
+
+message ListEntitlementsResponse {
+  repeated Entitlement entitlements = 1;
+}
+
+message ListEntitlementDevicesRequest {
+  string entitlement_id = 1;
+}
+
+message ListEntitlementDevicesResponse {
+  repeated Device devices = 1;
+}
+
+message UnenrollDeviceRequest {
+  string device_id = 1;
+  string entitlement_id = 2;
+}
+
+message DeleteDeviceRequest {
+  string device_id = 1;
+}
+
+message UpsertEntitlementRequest {
+  string user_id = 1;
+  EntitlementType type = 2;
+  string title = 3;
+  string source_id = 4;
+  optional int64 version = 5;
+  int32 allowed_devices = 6;
+  google.protobuf.Timestamp start_date = 7;
+  google.protobuf.Timestamp end_date = 8;
+  google.protobuf.Timestamp cancellation_date = 9;
+  optional bool is_trial = 10;
+}
+
+message DeleteEntitlementRequest {
+  string source_id = 1;
+}
