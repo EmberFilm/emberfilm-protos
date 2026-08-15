@@ -17,6 +17,10 @@ let package = Package(
             name: "NewsletterProtos",
             targets: ["NewsletterProtos"]
         ),
+        .library(
+            name: "UsersProtos",
+            targets: ["UsersProtos"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.4.0"),
@@ -37,6 +41,17 @@ let package = Package(
         ),
         .target(
             name: "NewsletterProtos",
+            dependencies: [
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            plugins: [
+                .plugin(name: "GRPCProtobufGenerator", package: "grpc-swift-protobuf")
+            ]
+        ),
+        .target(
+            name: "UsersProtos",
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
