@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package emberfilm.newsletter.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service SubscriberService {
+  rpc CreateSubscriber(CreateSubscriberRequest) returns (Subscriber);
+  rpc ListSubscribers(ListSubscribersRequest) returns (ListSubscribersResponse);
+}
+
+message Subscriber {
+  string email = 1;
+  google.protobuf.Timestamp subscription_date = 2;
+}
+
+message CreateSubscriberRequest {
+  string email = 1;
+}
+
+message ListSubscribersRequest {}
+
+message ListSubscribersResponse {
+  repeated Subscriber subscribers = 1;
+}
