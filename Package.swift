@@ -10,6 +10,10 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "AuthenticationProtos",
+            targets: ["AuthenticationProtos"]
+        ),
+        .library(
             name: "EntitlementsProtos",
             targets: ["EntitlementsProtos"]
         ),
@@ -28,6 +32,17 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.32.0"),
     ],
     targets: [
+        .target(
+            name: "AuthenticationProtos",
+            dependencies: [
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            plugins: [
+                .plugin(name: "GRPCProtobufGenerator", package: "grpc-swift-protobuf")
+            ]
+        ),
         .target(
             name: "EntitlementsProtos",
             dependencies: [

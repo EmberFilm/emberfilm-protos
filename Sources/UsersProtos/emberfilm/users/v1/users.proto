@@ -5,80 +5,42 @@ package emberfilm.users.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  UserRole role = 4;
+  google.protobuf.Timestamp creation_date = 5;
+  google.protobuf.Timestamp update_date = 6;
+}
+
 enum UserRole {
   USER_ROLE_UNSPECIFIED = 0;
   USER_ROLE_USER = 1;
   USER_ROLE_ADMIN = 2;
 }
 
-message User {
-  string id = 1;
-  string name = 2;
-  string email = 3;
-  bool email_verified = 4;
-  UserRole role = 5;
-  google.protobuf.Timestamp creation_date = 6;
-  google.protobuf.Timestamp update_date = 7;
-}
-
-message CreateUserRequest {
-  string name = 1;
-  string email = 2;
-}
-
 message GetUserByIDRequest {
-  string user_id = 1;
+  string id = 1;
 }
 
 message GetUserByEmailRequest {
   string email = 1;
 }
 
-message ListUsersRequest {}
-
 message ListUsersResponse {
   repeated User users = 1;
 }
 
-message UpdateUserRequest {
-  string user_id = 1;
-  optional string name = 2;
-  optional string email = 3;
-  optional bool email_verified = 4;
-  optional UserRole role = 5;
-}
-
-message DeleteUserRequest {
-  string user_id = 1;
-}
-
-message PromoteUserRequest {
-  string email = 1;
-}
-
-message StartEmailVerificationRequest {
-  string user_id = 1;
-  string name = 2;
-  string email = 3;
-}
-
-message CompleteEmailVerificationRequest {
-  string token = 1;
-}
-
-message ResendEmailVerificationRequest {
-  string email = 1;
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+  string idempotency_key = 3;
 }
 
 service UserService {
-  rpc CreateUser(CreateUserRequest) returns (User);
   rpc GetUserByID(GetUserByIDRequest) returns (User);
   rpc GetUserByEmail(GetUserByEmailRequest) returns (User);
-  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
-  rpc UpdateUser(UpdateUserRequest) returns (User);
-  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
-  rpc PromoteUser(PromoteUserRequest) returns (google.protobuf.Empty);
-  rpc StartEmailVerification(StartEmailVerificationRequest) returns (google.protobuf.Empty);
-  rpc CompleteEmailVerification(CompleteEmailVerificationRequest) returns (google.protobuf.Empty);
-  rpc ResendEmailVerification(ResendEmailVerificationRequest) returns (google.protobuf.Empty);
+  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (User);
 }
