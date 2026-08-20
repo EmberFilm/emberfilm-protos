@@ -2,9 +2,12 @@ syntax = "proto3";
 
 package emberfilm.authentication.v1;
 
+import "google/protobuf/timestamp.proto";
+
 service AuthenticationService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc AuthenticateWithPassword(AuthenticateWithPasswordRequest) returns (AuthenticationSession);
 }
 
 message RegisterRequest {
@@ -22,3 +25,15 @@ message VerifyEmailRequest {
 }
 
 message VerifyEmailResponse {}
+
+message AuthenticateWithPasswordRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthenticationSession {
+  string access_token = 1;
+  google.protobuf.Timestamp access_token_expiration_date = 2;
+  string refresh_token = 3;
+  google.protobuf.Timestamp refresh_token_expiration_date = 4;
+}
