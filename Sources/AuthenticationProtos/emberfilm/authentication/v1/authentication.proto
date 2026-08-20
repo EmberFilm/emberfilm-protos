@@ -8,6 +8,7 @@ service AuthenticationService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
   rpc AuthenticateWithPassword(AuthenticateWithPasswordRequest) returns (AuthenticationSession);
+  rpc RefreshAuthentication(RefreshAuthenticationRequest) returns (AuthenticationSession);
 }
 
 message RegisterRequest {
@@ -29,6 +30,10 @@ message VerifyEmailResponse {}
 message AuthenticateWithPasswordRequest {
   string email = 1;
   string password = 2;
+}
+
+message RefreshAuthenticationRequest {
+  string refresh_token = 1;
 }
 
 message AuthenticationSession {
