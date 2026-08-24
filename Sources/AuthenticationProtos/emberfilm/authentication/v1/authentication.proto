@@ -9,6 +9,10 @@ service AuthenticationService {
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
   rpc AuthenticateWithPassword(AuthenticateWithPasswordRequest) returns (AuthenticationSession);
   rpc RefreshAuthentication(RefreshAuthenticationRequest) returns (AuthenticationSession);
+  rpc BeginWebAuthnRegistration(BeginWebAuthnRegistrationRequest) returns (PublicKeyCredentialCreationOptions);
+  rpc FinishWebAuthnRegistration(FinishWebAuthnRegistrationRequest) returns (FinishWebAuthnRegistrationResponse);
+  rpc BeginWebAuthnAuthentication(BeginWebAuthnAuthenticationRequest) returns (PublicKeyCredentialRequestOptions);
+  rpc FinishWebAuthnAuthentication(FinishWebAuthnAuthenticationRequest) returns (AuthenticationSession);
 }
 
 message RegisterRequest {
@@ -41,4 +45,90 @@ message AuthenticationSession {
   google.protobuf.Timestamp access_token_expiration_date = 2;
   string refresh_token = 3;
   google.protobuf.Timestamp refresh_token_expiration_date = 4;
+}
+
+// MARK: - WebAuthn
+//
+// Every byte string a browser exchanges with an authenticator — challenges, credential IDs,
+// client data, attestation objects, signatures — travels as base64url text, which is the form
+// `navigator.credentials` produces and consumes. Keeping that encoding on the wire lets the
+// gateway pass the values through untouched and leaves one place, the authentication service,
+// that decodes them.
+
+message BeginWebAuthnRegistrationRequest {}
+
+message PublicKeyCredentialCreationOptions {
+  PublicKeyCredentialRelyingPartyEntity rp = 1;
+  PublicKeyCredentialUserEntity user = 2;
+  string challenge = 3;
+  repeated PublicKeyCredentialParameters pub_key_cred_params = 4;
+  optional uint32 timeout_milliseconds = 5;
+  string attestation = 6;
+}
+
+message PublicKeyCredentialRelyingPartyEntity {
+  string id = 1;
+  string name = 2;
+}
+
+message PublicKeyCredentialUserEntity {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+}
+
+message PublicKeyCredentialParameters {
+  string type = 1;
+  int32 alg = 2;
+}
+
+message FinishWebAuthnRegistrationRequest {
+  RegistrationCredential credential = 1;
+}
+
+message RegistrationCredential {
+  string id = 1;
+  string raw_id = 2;
+  AuthenticatorAttestationResponse response = 3;
+  string type = 4;
+}
+
+message AuthenticatorAttestationResponse {
+  string client_data_json = 1;
+  string attestation_object = 2;
+}
+
+message FinishWebAuthnRegistrationResponse {}
+
+message BeginWebAuthnAuthenticationRequest {}
+
+message PublicKeyCredentialRequestOptions {
+  string challenge = 1;
+  optional uint32 timeout_milliseconds = 2;
+  string rp_id = 3;
+  repeated PublicKeyCredentialDescriptor allow_credentials = 4;
+  string user_verification = 5;
+}
+
+message PublicKeyCredentialDescriptor {
+  string type = 1;
+  string id = 2;
+}
+
+message FinishWebAuthnAuthenticationRequest {
+  AuthenticationCredential credential = 1;
+}
+
+message AuthenticationCredential {
+  string id = 1;
+  string raw_id = 2;
+  AuthenticatorAssertionResponse response = 3;
+  string type = 4;
+}
+
+message AuthenticatorAssertionResponse {
+  string client_data_json = 1;
+  string authenticator_data = 2;
+  string signature = 3;
+  optional string user_handle = 4;
 }
