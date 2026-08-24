@@ -13,6 +13,8 @@ service AuthenticationService {
   rpc FinishWebAuthnRegistration(FinishWebAuthnRegistrationRequest) returns (FinishWebAuthnRegistrationResponse);
   rpc BeginWebAuthnAuthentication(BeginWebAuthnAuthenticationRequest) returns (PublicKeyCredentialRequestOptions);
   rpc FinishWebAuthnAuthentication(FinishWebAuthnAuthenticationRequest) returns (AuthenticationSession);
+  rpc CreateAuthCode(CreateAuthCodeRequest) returns (CreateAuthCodeResponse);
+  rpc ExchangeAuthCode(ExchangeAuthCodeRequest) returns (AuthenticationSession);
 }
 
 message RegisterRequest {
@@ -131,4 +133,21 @@ message AuthenticatorAssertionResponse {
   string authenticator_data = 2;
   string signature = 3;
   optional string user_handle = 4;
+}
+
+// MARK: - Auth codes
+//
+// The handoff behind "Continue with Browser": a native app opens a browser, the person signs in
+// there, and the browser trades its session for a short-lived code the app can redeem for one of
+// its own. The code travels through a custom URL scheme, which is why it is a bearer value with
+// a lifetime in minutes rather than anything durable.
+
+message CreateAuthCodeRequest {}
+
+message CreateAuthCodeResponse {
+  string code = 1;
+}
+
+message ExchangeAuthCodeRequest {
+  string code = 1;
 }
