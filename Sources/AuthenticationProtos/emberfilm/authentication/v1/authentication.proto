@@ -15,6 +15,11 @@ service AuthenticationService {
   rpc FinishWebAuthnAuthentication(FinishWebAuthnAuthenticationRequest) returns (AuthenticationSession);
   rpc CreateAuthCode(CreateAuthCodeRequest) returns (CreateAuthCodeResponse);
   rpc ExchangeAuthCode(ExchangeAuthCodeRequest) returns (AuthenticationSession);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc StartPasswordReset(StartPasswordResetRequest) returns (StartPasswordResetResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
 }
 
 message RegisterRequest {
@@ -151,3 +156,47 @@ message CreateAuthCodeResponse {
 message ExchangeAuthCodeRequest {
   string code = 1;
 }
+
+// MARK: - Sessions
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {}
+
+// MARK: - Passwords
+//
+// ChangePassword carries no user. The caller's token names them, for the same reason it does on
+// CreateAuthCode: a request able to name its own subject would let anyone set anyone's password.
+//
+// Neither ChangePassword nor ResetPassword answers with a session. Both revoke every refresh
+// token the user holds, and a caller that wants a new session authenticates for one.
+
+message ChangePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+
+message ChangePasswordResponse {}
+
+message StartPasswordResetRequest {
+  string email = 1;
+}
+
+message StartPasswordResetResponse {}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {}
+
+// MARK: - Registration
+
+message ResendVerificationEmailRequest {
+  string email = 1;
+}
+
+message ResendVerificationEmailResponse {}
