@@ -5,30 +5,20 @@ package emberfilm.billing.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-// The catalogue, in two halves. A product is the grant a purchase confers — a licence for one
-// major version, or a subscription — and how many devices it may enroll; it names no store and
-// no price. An offer is one way to buy a product: a provider, the identifier that provider sells
-// it under, and what it costs there. What the website calls a package is an offer with its
-// product, and its id is the offer's.
-service ProductService {
-  rpc ListProducts(google.protobuf.Empty) returns (ListProductsResponse);
-  rpc GetProduct(GetProductRequest) returns (Product);
-  rpc CreateProduct(CreateProductRequest) returns (Product);
-  rpc UpdateProduct(UpdateProductRequest) returns (Product);
-  rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty);
+// The catalogue and everything a purchase of it involves. A package is a buyable catalogue item —
+// the monolith's model: a Stripe price, a title, what it grants, and how many devices it may
+// enroll. Reading it is public; writing it is an administrator's.
+service PackageService {
+  rpc ListPackages(google.protobuf.Empty) returns (ListPackagesResponse);
+  rpc GetPackage(GetPackageRequest) returns (Package);
+  rpc CreatePackage(CreatePackageRequest) returns (Package);
+  rpc UpdatePackage(UpdatePackageRequest) returns (Package);
+  rpc DeletePackage(DeletePackageRequest) returns (google.protobuf.Empty);
 }
 
-service OfferService {
-  rpc ListOffers(google.protobuf.Empty) returns (ListOffersResponse);
-  rpc GetOffer(GetOfferRequest) returns (Offer);
-  rpc CreateOffer(CreateOfferRequest) returns (Offer);
-  rpc UpdateOffer(UpdateOfferRequest) returns (Offer);
-  rpc DeleteOffer(DeleteOfferRequest) returns (google.protobuf.Empty);
-}
-
-// Buying, and what was bought. The caller of the first three is the user the token names; the
-// webhook carries no caller and is authenticated by its signature; the purchase list names a
-// user, who must be the caller unless the caller is privileged.
+// Buying, and what was bought. The first three RPCs are the user the token names; the webhook
+// carries no caller and is authenticated by its signature; the purchase list names a user, who
+// must be the caller unless the caller is privileged.
 service BillingService {
   rpc CreateCheckoutSession(CreateCheckoutSessionRequest) returns (CreateCheckoutSessionResponse);
   rpc CreatePortalSession(google.protobuf.Empty) returns (CreatePortalSessionResponse);
@@ -37,120 +27,75 @@ service BillingService {
   rpc ListPurchases(ListPurchasesRequest) returns (ListPurchasesResponse);
 }
 
-// MARK: - Products
+// MARK: - Packages
 
-enum ProductType {
-  PRODUCT_TYPE_UNSPECIFIED = 0;
-  PRODUCT_TYPE_LICENSE = 1;
-  PRODUCT_TYPE_SUBSCRIPTION = 2;
+enum PackageType {
+  PACKAGE_TYPE_UNSPECIFIED = 0;
+  PACKAGE_TYPE_LICENSE = 1;
+  PACKAGE_TYPE_SUBSCRIPTION = 2;
 }
 
-message Product {
+message Package {
   string id = 1;
-  string title = 2;
-  ProductType type = 3;
-  // The major version a licence is for. Set for a licence, absent for a subscription.
-  optional int64 version = 4;
-  int32 allowed_devices = 5;
-  google.protobuf.Timestamp creation_date = 6;
-  google.protobuf.Timestamp update_date = 7;
-}
-
-message ListProductsResponse {
-  repeated Product products = 1;
-}
-
-message GetProductRequest {
-  string id = 1;
-}
-
-// The identifier is the catalogue's to assign and is returned on the product. The idempotency
-// key is required: a create retried with the same key and the same fields returns the product
-// already made, and the same key with different fields is refused.
-message CreateProductRequest {
-  string title = 1;
-  ProductType type = 2;
-  optional int64 version = 3;
-  int32 allowed_devices = 4;
-  string idempotency_key = 5;
-}
-
-// A partial update: a field left unset keeps its value. The type is not here — a licence does
-// not become a subscription; that is a different product.
-message UpdateProductRequest {
-  string id = 1;
-  optional string title = 2;
-  optional int64 version = 3;
-  optional int32 allowed_devices = 4;
-}
-
-message DeleteProductRequest {
-  string id = 1;
-}
-
-// MARK: - Offers
-
-enum Provider {
-  PROVIDER_UNSPECIFIED = 0;
-  PROVIDER_STRIPE = 1;
-  PROVIDER_APPLE = 2;
-}
-
-message Offer {
-  string id = 1;
-  string product_id = 2;
-  Provider provider = 3;
-  // What the provider sells it under: a Stripe price id, an App Store product id.
-  string provider_product_id = 4;
-  // In the currency's minor unit.
+  // Stripe price id (`price_…`). Internal — the gateway never exposes it.
+  string price_id = 2;
+  string title = 3;
+  PackageType type = 4;
   int64 amount = 5;
-  // ISO 4217, lowercase.
   string currency = 6;
-  // Days of free trial a subscription offer grants a customer who has never bought anything.
-  // Absent for a licence, and for a subscription without one.
-  optional int32 trial_period_days = 7;
-  google.protobuf.Timestamp creation_date = 8;
-  google.protobuf.Timestamp update_date = 9;
+  // Major app version for a licence. Absent for a subscription.
+  optional int64 version = 7;
+  int32 allowed_devices = 8;
+  // Free-trial length in days for a subscription. Absent, or zero, means none.
+  optional int32 trial_period_days = 9;
+  google.protobuf.Timestamp creation_date = 10;
+  google.protobuf.Timestamp update_date = 11;
 }
 
-message ListOffersResponse {
-  repeated Offer offers = 1;
+message ListPackagesResponse {
+  repeated Package packages = 1;
 }
 
-message GetOfferRequest {
+message GetPackageRequest {
   string id = 1;
 }
 
-message CreateOfferRequest {
-  string product_id = 1;
-  Provider provider = 2;
-  string provider_product_id = 3;
+// The identifier is the catalogue's to assign and is returned on the package. The idempotency key
+// is required: a create retried with the same key and the same fields returns the package already
+// made, and the same key with different fields is refused.
+message CreatePackageRequest {
+  string price_id = 1;
+  string title = 2;
+  PackageType type = 3;
   int64 amount = 4;
   string currency = 5;
-  optional int32 trial_period_days = 6;
-  string idempotency_key = 7;
+  optional int64 version = 6;
+  int32 allowed_devices = 7;
+  optional int32 trial_period_days = 8;
+  string idempotency_key = 9;
 }
 
-// A partial update. The product and the provider are not here: an offer is one product on one
-// store, and a different pairing is a different offer.
-message UpdateOfferRequest {
+// A partial update: a field left unset keeps its value. The type is not here — a licence does not
+// become a subscription; that is a different package.
+message UpdatePackageRequest {
   string id = 1;
-  optional string provider_product_id = 2;
-  optional int64 amount = 3;
-  optional string currency = 4;
-  optional int32 trial_period_days = 5;
+  optional string price_id = 2;
+  optional string title = 3;
+  optional int64 amount = 4;
+  optional string currency = 5;
+  optional int64 version = 6;
+  optional int32 allowed_devices = 7;
+  optional int32 trial_period_days = 8;
 }
 
-message DeleteOfferRequest {
+message DeletePackageRequest {
   string id = 1;
 }
 
 // MARK: - Billing
 
 message CreateCheckoutSessionRequest {
-  string offer_id = 1;
-  // Whether the caller asked for the offer's trial. Granted only when the offer has one and the
-  // caller has never bought anything.
+  string package_id = 1;
   bool request_trial = 2;
 }
 
@@ -162,8 +107,6 @@ message CreatePortalSessionResponse {
   string url = 1;
 }
 
-// The client's return from Stripe: a trigger, never the truth. The session is re-fetched from
-// Stripe before anything is granted.
 message HandleCheckoutSuccessRequest {
   string session_id = 1;
 }
@@ -171,6 +114,12 @@ message HandleCheckoutSuccessRequest {
 message HandleStripeWebhookRequest {
   bytes payload = 1;
   string signature = 2;
+}
+
+enum Provider {
+  PROVIDER_UNSPECIFIED = 0;
+  PROVIDER_STRIPE = 1;
+  PROVIDER_APPLE = 2;
 }
 
 enum PurchaseStatus {
@@ -184,26 +133,22 @@ enum PurchaseStatus {
   PURCHASE_STATUS_REVOKED = 7;
 }
 
-// One purchase lineage with a provider: a Stripe checkout session or subscription, an App Store
-// transaction or subscription. The entitlement it confers lives with the entitlements service;
-// this is the record of the sale and the provider's current view of it.
+// One purchase lineage with a provider, and the provider's current view of it. The entitlement it
+// confers lives with the entitlements service; this is the record of the sale.
 message Purchase {
   string id = 1;
   string user_id = 2;
   Provider provider = 3;
-  ProductType type = 4;
-  // The provider's stable identity for the lineage: a checkout session or subscription id, an
-  // Apple transaction or original transaction id.
+  PackageType type = 4;
   string source_id = 5;
   optional string current_transaction_id = 6;
-  optional string offer_id = 7;
-  optional string product_id = 8;
-  PurchaseStatus status = 9;
-  google.protobuf.Timestamp purchase_date = 10;
-  google.protobuf.Timestamp expiration_date = 11;
-  google.protobuf.Timestamp cancellation_date = 12;
-  google.protobuf.Timestamp creation_date = 13;
-  google.protobuf.Timestamp update_date = 14;
+  optional string package_id = 7;
+  PurchaseStatus status = 8;
+  google.protobuf.Timestamp purchase_date = 9;
+  google.protobuf.Timestamp expiration_date = 10;
+  google.protobuf.Timestamp cancellation_date = 11;
+  google.protobuf.Timestamp creation_date = 12;
+  google.protobuf.Timestamp update_date = 13;
 }
 
 message ListPurchasesRequest {
