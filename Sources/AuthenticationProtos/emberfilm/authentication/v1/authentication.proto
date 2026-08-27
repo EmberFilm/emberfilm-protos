@@ -20,6 +20,7 @@ service AuthenticationService {
   rpc StartPasswordReset(StartPasswordResetRequest) returns (StartPasswordResetResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
   rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
+  rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
 }
 
 message RegisterRequest {
@@ -200,3 +201,21 @@ message ResendVerificationEmailRequest {
 }
 
 message ResendVerificationEmailResponse {}
+
+// MARK: - Service tokens
+//
+// A process — a worker, a service reacting to a webhook — authenticates as itself by presenting
+// the credential it was issued, and receives an access token whose subject is the credential's
+// id and whose role is `service`. There is no refresh token: a process holds its secret and
+// exchanges it again when the token nears expiry, which is what makes revoking the credential
+// take effect within one token lifetime.
+
+message IssueServiceTokenRequest {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message IssueServiceTokenResponse {
+  string access_token = 1;
+  google.protobuf.Timestamp expiration_date = 2;
+}
