@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package emberfilm.authentication.v1;
 
+import "google/protobuf/empty.proto";
+
 import "google/protobuf/timestamp.proto";
 
 service AuthenticationService {
@@ -21,6 +23,56 @@ service AuthenticationService {
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
   rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
   rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
+}
+
+// The registration lifecycle operations the registration worker orchestrates. It holds no
+// database and calls these on the authentication service, authenticated as a service — each
+// requires an administrator or a service.
+service RegistrationService {
+  rpc ResolveRegistration(ResolveRegistrationRequest) returns (ResolvedRegistration);
+  rpc IssueVerificationChallenge(IssueVerificationChallengeRequest) returns (IssueVerificationChallengeResponse);
+  rpc DeleteVerificationToken(DeleteVerificationTokenRequest) returns (google.protobuf.Empty);
+  rpc CompleteRegistration(CompleteRegistrationRequest) returns (CompleteRegistrationResponse);
+  rpc ExpireRegistration(ExpireRegistrationRequest) returns (google.protobuf.Empty);
+}
+
+message ResolveRegistrationRequest {
+  string registration_id = 1;
+}
+
+message ResolvedRegistration {
+  string registration_id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp expiration_date = 4;
+}
+
+message IssueVerificationChallengeRequest {
+  string registration_id = 1;
+  google.protobuf.Timestamp expiration_date = 2;
+}
+
+// The one-time token to email the registrant; only its digest is stored.
+message IssueVerificationChallengeResponse {
+  string token = 1;
+}
+
+message DeleteVerificationTokenRequest {
+  string registration_id = 1;
+}
+
+message CompleteRegistrationRequest {
+  string registration_id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message CompleteRegistrationResponse {
+  string user_id = 1;
+}
+
+message ExpireRegistrationRequest {
+  string registration_id = 1;
 }
 
 message RegisterRequest {
