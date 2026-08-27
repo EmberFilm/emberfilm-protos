@@ -5,7 +5,7 @@ package emberfilm.newsletter.v1;
 import "google/protobuf/timestamp.proto";
 
 service SubscriberService {
-  rpc CreateSubscriber(CreateSubscriberRequest) returns (Subscriber);
+  rpc CreateSubscriber(CreateSubscriberRequest) returns (CreateSubscriberResponse);
   rpc ListSubscribers(ListSubscribersRequest) returns (ListSubscribersResponse);
 }
 
@@ -17,6 +17,11 @@ message Subscriber {
 message CreateSubscriberRequest {
   string email = 1;
 }
+
+// Acceptance, not the record. A subscriber is an address rather than an account, and the list of
+// addresses is an administrator's to read — including the row just written, so nothing is
+// returned that the caller could not otherwise see.
+message CreateSubscriberResponse {}
 
 message ListSubscribersRequest {}
 
