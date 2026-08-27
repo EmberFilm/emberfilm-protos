@@ -14,16 +14,16 @@ let package = Package(
             targets: ["AuthenticationProtos"]
         ),
         .library(
+            name: "BillingProtos",
+            targets: ["BillingProtos"]
+        ),
+        .library(
             name: "EntitlementsProtos",
             targets: ["EntitlementsProtos"]
         ),
         .library(
             name: "NewsletterProtos",
             targets: ["NewsletterProtos"]
-        ),
-        .library(
-            name: "ProductsProtos",
-            targets: ["ProductsProtos"]
         ),
         .library(
             name: "UsersProtos",
@@ -48,6 +48,17 @@ let package = Package(
             ]
         ),
         .target(
+            name: "BillingProtos",
+            dependencies: [
+                .product(name: "GRPCCore", package: "grpc-swift-2"),
+                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            plugins: [
+                .plugin(name: "GRPCProtobufGenerator", package: "grpc-swift-protobuf")
+            ]
+        ),
+        .target(
             name: "EntitlementsProtos",
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
@@ -60,17 +71,6 @@ let package = Package(
         ),
         .target(
             name: "NewsletterProtos",
-            dependencies: [
-                .product(name: "GRPCCore", package: "grpc-swift-2"),
-                .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
-                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
-            ],
-            plugins: [
-                .plugin(name: "GRPCProtobufGenerator", package: "grpc-swift-protobuf")
-            ]
-        ),
-        .target(
-            name: "ProductsProtos",
             dependencies: [
                 .product(name: "GRPCCore", package: "grpc-swift-2"),
                 .product(name: "GRPCProtobuf", package: "grpc-swift-protobuf"),
