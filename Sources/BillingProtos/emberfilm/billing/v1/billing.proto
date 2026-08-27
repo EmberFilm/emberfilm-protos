@@ -25,6 +25,16 @@ service BillingService {
   rpc HandleCheckoutSuccess(HandleCheckoutSuccessRequest) returns (google.protobuf.Empty);
   rpc HandleStripeWebhook(HandleStripeWebhookRequest) returns (google.protobuf.Empty);
   rpc ListPurchases(ListPurchasesRequest) returns (ListPurchasesResponse);
+
+  // Reconciliation, for the billing worker alone — it holds no database and resolves and records
+  // through these, authenticated as a service. Each requires an administrator or a service.
+  rpc GetCustomerByStripeID(GetCustomerByStripeIDRequest) returns (Customer);
+  rpc UpsertCustomer(UpsertCustomerRequest) returns (Customer);
+  rpc GetPackageByPriceID(GetPackageByPriceIDRequest) returns (Package);
+  rpc UpsertPurchase(UpsertPurchaseRequest) returns (Purchase);
+  // The recorded lineage, if any — how a revoke, whose provider view carries no customer, finds
+  // its owner. Answers NOT_FOUND when nothing is recorded.
+  rpc FindPurchase(FindPurchaseRequest) returns (Purchase);
 }
 
 // MARK: - Packages
@@ -149,6 +159,50 @@ message Purchase {
   google.protobuf.Timestamp cancellation_date = 11;
   google.protobuf.Timestamp creation_date = 12;
   google.protobuf.Timestamp update_date = 13;
+}
+
+// A user's commercial identity with the providers, as the reconciler needs it.
+message Customer {
+  string user_id = 1;
+  optional string stripe_customer_id = 2;
+  google.protobuf.Timestamp last_purchase_date = 3;
+  google.protobuf.Timestamp creation_date = 4;
+  google.protobuf.Timestamp update_date = 5;
+}
+
+message GetCustomerByStripeIDRequest {
+  string stripe_customer_id = 1;
+}
+
+// Fill-if-absent for the Stripe id; the last-purchase date only ever advances.
+message UpsertCustomerRequest {
+  string user_id = 1;
+  optional string stripe_customer_id = 2;
+  google.protobuf.Timestamp last_purchase_date = 3;
+}
+
+message GetPackageByPriceIDRequest {
+  string price_id = 1;
+}
+
+// Owner-locked on the service side: an upsert that matches a lineage owned by another user is
+// refused. Carries the destination state; the reconciler derives it from live provider state.
+message UpsertPurchaseRequest {
+  string user_id = 1;
+  Provider provider = 2;
+  PackageType type = 3;
+  string source_id = 4;
+  optional string current_transaction_id = 5;
+  optional string package_id = 6;
+  PurchaseStatus status = 7;
+  google.protobuf.Timestamp purchase_date = 8;
+  google.protobuf.Timestamp expiration_date = 9;
+  google.protobuf.Timestamp cancellation_date = 10;
+}
+
+message FindPurchaseRequest {
+  Provider provider = 1;
+  string source_id = 2;
 }
 
 message ListPurchasesRequest {
