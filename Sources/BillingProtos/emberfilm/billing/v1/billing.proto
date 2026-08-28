@@ -26,8 +26,11 @@ service BillingService {
   rpc HandleStripeWebhook(HandleStripeWebhookRequest) returns (google.protobuf.Empty);
   rpc ListPurchases(ListPurchasesRequest) returns (ListPurchasesResponse);
 
-  // Reconciliation, for the billing worker alone — it holds no database and resolves and records
-  // through these, authenticated as a service. Each requires an administrator or a service.
+}
+
+// Reconciliation, for the billing worker alone — it holds no database and resolves and records
+// through these, authenticated as a service. Each requires an administrator or a service.
+service ReconciliationService {
   rpc GetCustomerByStripeID(GetCustomerByStripeIDRequest) returns (Customer);
   rpc UpsertCustomer(UpsertCustomerRequest) returns (Customer);
   rpc GetPackageByPriceID(GetPackageByPriceIDRequest) returns (Package);
@@ -36,6 +39,7 @@ service BillingService {
   // its owner. Answers NOT_FOUND when nothing is recorded.
   rpc FindPurchase(FindPurchaseRequest) returns (Purchase);
 }
+
 
 // MARK: - Packages
 
