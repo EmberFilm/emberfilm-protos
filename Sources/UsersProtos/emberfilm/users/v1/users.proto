@@ -9,15 +9,15 @@ message User {
   string id = 1;
   string name = 2;
   string email = 3;
-  UserRole role = 4;
+  Role role = 4;
   google.protobuf.Timestamp creation_date = 5;
   google.protobuf.Timestamp update_date = 6;
 }
 
-enum UserRole {
-  USER_ROLE_UNSPECIFIED = 0;
-  USER_ROLE_USER = 1;
-  USER_ROLE_ADMIN = 2;
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_USER = 1;
+  ROLE_ADMIN = 2;
 }
 
 message GetUserByIDRequest {
