@@ -70,9 +70,9 @@ the model. Do not add an `id` field to a create request to make a caller's retry
 refresh token because a process gets none; a session type with an empty field would make the
 contract lie.
 
-**`Role` on the wire is the users service's enum, not the token's.** `emberfilm-identity`
-defines the token's `Role` (`user`, `admin`, `service`); this package's `Role` is what the
-users service persists (`ROLE_USER`, `ROLE_ADMIN`). They are mapped at the transport
+**`UserRole` on the wire is the users service's enum, not the token's.** `emberfilm-identity`
+defines the token's `Role` (`user`, `admin`, `service`); this package's `UserRole` is what the
+users service persists (`USER_ROLE_USER`, `USER_ROLE_ADMIN`). They are mapped at the transport
 boundary and `USER_ROLE_UNSPECIFIED` is refused. Adding a role touches identity first, then here.
 
 **The billing contract models the monolith's package.** Products and offers are the gateway's
