@@ -6,73 +6,35 @@ import "google/protobuf/empty.proto";
 
 import "google/protobuf/timestamp.proto";
 
-service AuthenticationService {
+// One service per kind of caller, so that a server applies its authentication per audience:
+// nothing on the public service, the bearer-token interceptor on the user service. Which service
+// an RPC belongs to says what it needs from the caller before the request is read.
+
+// Reachable by anyone, with no credential at all. Signing in, registering and recovering a
+// password all happen here, because the caller has no token yet; Logout and RefreshAuthentication
+// too, because they present a refresh token rather than an access token.
+service AuthenticationPublicService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
   rpc AuthenticateWithPassword(AuthenticateWithPasswordRequest) returns (AuthenticationSession);
   rpc RefreshAuthentication(RefreshAuthenticationRequest) returns (AuthenticationSession);
-  rpc BeginWebAuthnRegistration(BeginWebAuthnRegistrationRequest) returns (PublicKeyCredentialCreationOptions);
-  rpc FinishWebAuthnRegistration(FinishWebAuthnRegistrationRequest) returns (FinishWebAuthnRegistrationResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
   rpc BeginWebAuthnAuthentication(BeginWebAuthnAuthenticationRequest) returns (PublicKeyCredentialRequestOptions);
   rpc FinishWebAuthnAuthentication(FinishWebAuthnAuthenticationRequest) returns (AuthenticationSession);
-  rpc CreateAuthCode(CreateAuthCodeRequest) returns (CreateAuthCodeResponse);
   rpc ExchangeAuthCode(ExchangeAuthCodeRequest) returns (AuthenticationSession);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
-  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
   rpc StartPasswordReset(StartPasswordResetRequest) returns (StartPasswordResetResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
-  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
-  rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
 }
 
-// The registration lifecycle operations the registration worker orchestrates. It holds no
-// database and calls these on the authentication service, authenticated as a service — each
-// requires an administrator or a service.
-service RegistrationService {
-  rpc ResolveRegistration(ResolveRegistrationRequest) returns (ResolvedRegistration);
-  rpc IssueVerificationChallenge(IssueVerificationChallengeRequest) returns (IssueVerificationChallengeResponse);
-  rpc DeleteVerificationToken(DeleteVerificationTokenRequest) returns (google.protobuf.Empty);
-  rpc CompleteRegistration(CompleteRegistrationRequest) returns (CompleteRegistrationResponse);
-  rpc ExpireRegistration(ExpireRegistrationRequest) returns (google.protobuf.Empty);
-}
-
-message ResolveRegistrationRequest {
-  string registration_id = 1;
-}
-
-message ResolvedRegistration {
-  string registration_id = 1;
-  string name = 2;
-  string email = 3;
-  google.protobuf.Timestamp expiration_date = 4;
-}
-
-message IssueVerificationChallengeRequest {
-  string registration_id = 1;
-  google.protobuf.Timestamp expiration_date = 2;
-}
-
-// The one-time token to email the registrant; only its digest is stored.
-message IssueVerificationChallengeResponse {
-  string token = 1;
-}
-
-message DeleteVerificationTokenRequest {
-  string registration_id = 1;
-}
-
-message CompleteRegistrationRequest {
-  string registration_id = 1;
-  string name = 2;
-  string email = 3;
-}
-
-message CompleteRegistrationResponse {
-  string user_id = 1;
-}
-
-message ExpireRegistrationRequest {
-  string registration_id = 1;
+// Reachable by a signed-in user, whose token names the subject of every one of these: a request
+// able to name its own subject would let anyone register a passkey for, or set the password of,
+// anyone.
+service AuthenticationUserService {
+  rpc BeginWebAuthnRegistration(BeginWebAuthnRegistrationRequest) returns (PublicKeyCredentialCreationOptions);
+  rpc FinishWebAuthnRegistration(FinishWebAuthnRegistrationRequest) returns (FinishWebAuthnRegistrationResponse);
+  rpc CreateAuthCode(CreateAuthCodeRequest) returns (CreateAuthCodeResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 message RegisterRequest {
@@ -253,21 +215,3 @@ message ResendVerificationEmailRequest {
 }
 
 message ResendVerificationEmailResponse {}
-
-// MARK: - Service tokens
-//
-// A process — a worker, a service reacting to a webhook — authenticates as itself by presenting
-// the credential it was issued, and receives an access token whose subject is the credential's
-// id and whose role is `service`. There is no refresh token: a process holds its secret and
-// exchanges it again when the token nears expiry, which is what makes revoking the credential
-// take effect within one token lifetime.
-
-message IssueServiceTokenRequest {
-  string client_id = 1;
-  string client_secret = 2;
-}
-
-message IssueServiceTokenResponse {
-  string access_token = 1;
-  google.protobuf.Timestamp expiration_date = 2;
-}
