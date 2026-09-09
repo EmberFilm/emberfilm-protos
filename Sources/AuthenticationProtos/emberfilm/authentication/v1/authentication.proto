@@ -30,7 +30,7 @@ service AuthenticationPublicService {
 // Reachable by a signed-in user, whose token names the subject of every one of these: a request
 // able to name its own subject would let anyone register a passkey for, or set the password of,
 // anyone.
-service AuthenticationUserService {
+service AuthenticationService {
   rpc BeginWebAuthnRegistration(BeginWebAuthnRegistrationRequest) returns (PublicKeyCredentialCreationOptions);
   rpc FinishWebAuthnRegistration(FinishWebAuthnRegistrationRequest) returns (FinishWebAuthnRegistrationResponse);
   rpc CreateAuthCode(CreateAuthCodeRequest) returns (CreateAuthCodeResponse);

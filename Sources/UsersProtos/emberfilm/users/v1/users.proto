@@ -45,7 +45,7 @@ message CreateUserRequest {
 
 // Reachable by a signed-in user. GetUserByID answers for the caller's own row; ListUsers is an
 // administrator's, decided in the use case.
-service UserUserService {
+service UserService {
   rpc GetUserByID(GetUserByIDRequest) returns (User);
   rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
 }

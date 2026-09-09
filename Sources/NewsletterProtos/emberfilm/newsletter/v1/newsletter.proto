@@ -13,8 +13,9 @@ service SubscriberPublicService {
   rpc CreateSubscriber(CreateSubscriberRequest) returns (CreateSubscriberResponse);
 }
 
-// Reachable by a signed-in user. What a given user may do is the service's decision, per RPC.
-service SubscriberUserService {
+// Reachable by a signed-in user — the ordinary surface, which is why it carries no suffix. What a
+// given user may do is the service's decision, per RPC.
+service SubscriberService {
   rpc ListSubscribers(ListSubscribersRequest) returns (ListSubscribersResponse);
 }
 

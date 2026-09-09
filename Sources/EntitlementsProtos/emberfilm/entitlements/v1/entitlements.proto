@@ -12,7 +12,7 @@ import "google/protobuf/timestamp.proto";
 
 // Reachable by a signed-in user. The first five act on the caller's own account and name it —
 // user_id must be the caller's. The last three are an administrator's, decided in the use case.
-service EntitlementUserService {
+service EntitlementService {
   rpc ClaimEntitlement(ClaimEntitlementRequest) returns (Entitlement);
   rpc ListEntitlements(ListEntitlementsRequest) returns (ListEntitlementsResponse);
   rpc ListEntitlementDevices(ListEntitlementDevicesRequest) returns (ListEntitlementDevicesResponse);

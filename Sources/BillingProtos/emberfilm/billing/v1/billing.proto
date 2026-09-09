@@ -17,7 +17,7 @@ service PackagePublicService {
 }
 
 // Writing the catalogue is an administrator's, decided in the use case.
-service PackageUserService {
+service PackageService {
   rpc CreatePackage(CreatePackageRequest) returns (Package);
   rpc UpdatePackage(UpdatePackageRequest) returns (Package);
   rpc DeletePackage(DeletePackageRequest) returns (google.protobuf.Empty);
@@ -30,7 +30,7 @@ service BillingPublicService {
 
 // Buying, and what was bought, for the user the token names. ListPurchases names a user, who must
 // be the caller.
-service BillingUserService {
+service BillingService {
   rpc CreateCheckoutSession(CreateCheckoutSessionRequest) returns (CreateCheckoutSessionResponse);
   rpc CreatePortalSession(google.protobuf.Empty) returns (CreatePortalSessionResponse);
   rpc HandleCheckoutSuccess(HandleCheckoutSuccessRequest) returns (google.protobuf.Empty);
