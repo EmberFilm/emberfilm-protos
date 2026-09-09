@@ -5,41 +5,37 @@ package emberfilm.billing.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-// The catalogue and everything a purchase of it involves. A package is a buyable catalogue item —
-// the monolith's model: a Stripe price, a title, what it grants, and how many devices it may
-// enroll. Reading it is public; writing it is an administrator's.
-service PackageService {
+// One service per kind of caller, so that a server applies its authentication per audience:
+// nothing on the public services, the bearer-token interceptor on the user services. Which service
+// an RPC belongs to says what it needs from the caller before the request is read.
+
+// The catalogue, readable by anyone. A package is a buyable catalogue item — the monolith's
+// model: a Stripe price, a title, what it grants, and how many devices it may enroll.
+service PackagePublicService {
   rpc ListPackages(google.protobuf.Empty) returns (ListPackagesResponse);
   rpc GetPackage(GetPackageRequest) returns (Package);
+}
+
+// Writing the catalogue is an administrator's, decided in the use case.
+service PackageUserService {
   rpc CreatePackage(CreatePackageRequest) returns (Package);
   rpc UpdatePackage(UpdatePackageRequest) returns (Package);
   rpc DeletePackage(DeletePackageRequest) returns (google.protobuf.Empty);
 }
 
-// Buying, and what was bought. The first three RPCs are the user the token names; the webhook
-// carries no caller and is authenticated by its signature; the purchase list names a user, who
-// must be the caller unless the caller is privileged.
-service BillingService {
+// The webhook carries no caller and is authenticated by its signature.
+service BillingPublicService {
+  rpc HandleStripeWebhook(HandleStripeWebhookRequest) returns (google.protobuf.Empty);
+}
+
+// Buying, and what was bought, for the user the token names. ListPurchases names a user, who must
+// be the caller.
+service BillingUserService {
   rpc CreateCheckoutSession(CreateCheckoutSessionRequest) returns (CreateCheckoutSessionResponse);
   rpc CreatePortalSession(google.protobuf.Empty) returns (CreatePortalSessionResponse);
   rpc HandleCheckoutSuccess(HandleCheckoutSuccessRequest) returns (google.protobuf.Empty);
-  rpc HandleStripeWebhook(HandleStripeWebhookRequest) returns (google.protobuf.Empty);
   rpc ListPurchases(ListPurchasesRequest) returns (ListPurchasesResponse);
-
 }
-
-// Reconciliation, for the billing worker alone — it holds no database and resolves and records
-// through these, authenticated as a service. Each requires an administrator or a service.
-service ReconciliationService {
-  rpc GetCustomerByStripeID(GetCustomerByStripeIDRequest) returns (Customer);
-  rpc UpsertCustomer(UpsertCustomerRequest) returns (Customer);
-  rpc GetPackageByPriceID(GetPackageByPriceIDRequest) returns (Package);
-  rpc UpsertPurchase(UpsertPurchaseRequest) returns (Purchase);
-  // The recorded lineage, if any — how a revoke, whose provider view carries no customer, finds
-  // its owner. Answers NOT_FOUND when nothing is recorded.
-  rpc FindPurchase(FindPurchaseRequest) returns (Purchase);
-}
-
 
 // MARK: - Packages
 
@@ -163,50 +159,6 @@ message Purchase {
   google.protobuf.Timestamp cancellation_date = 11;
   google.protobuf.Timestamp creation_date = 12;
   google.protobuf.Timestamp update_date = 13;
-}
-
-// A user's commercial identity with the providers, as the reconciler needs it.
-message Customer {
-  string user_id = 1;
-  optional string stripe_customer_id = 2;
-  google.protobuf.Timestamp last_purchase_date = 3;
-  google.protobuf.Timestamp creation_date = 4;
-  google.protobuf.Timestamp update_date = 5;
-}
-
-message GetCustomerByStripeIDRequest {
-  string stripe_customer_id = 1;
-}
-
-// Fill-if-absent for the Stripe id; the last-purchase date only ever advances.
-message UpsertCustomerRequest {
-  string user_id = 1;
-  optional string stripe_customer_id = 2;
-  google.protobuf.Timestamp last_purchase_date = 3;
-}
-
-message GetPackageByPriceIDRequest {
-  string price_id = 1;
-}
-
-// Owner-locked on the service side: an upsert that matches a lineage owned by another user is
-// refused. Carries the destination state; the reconciler derives it from live provider state.
-message UpsertPurchaseRequest {
-  string user_id = 1;
-  Provider provider = 2;
-  PackageType type = 3;
-  string source_id = 4;
-  optional string current_transaction_id = 5;
-  optional string package_id = 6;
-  PurchaseStatus status = 7;
-  google.protobuf.Timestamp purchase_date = 8;
-  google.protobuf.Timestamp expiration_date = 9;
-  google.protobuf.Timestamp cancellation_date = 10;
-}
-
-message FindPurchaseRequest {
-  Provider provider = 1;
-  string source_id = 2;
 }
 
 message ListPurchasesRequest {
