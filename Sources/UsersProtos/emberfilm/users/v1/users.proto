@@ -38,9 +38,23 @@ message CreateUserRequest {
   string idempotency_key = 3;
 }
 
-service UserService {
+// One service per kind of caller, so that a server applies its authentication per audience: the
+// bearer-token interceptor on the user service, the peer-certificate interceptor on the internal
+// service. Which service an RPC belongs to says what it needs from the caller before the request
+// is read.
+
+// Reachable by a signed-in user. GetUserByID answers for the caller's own row; ListUsers is an
+// administrator's, decided in the use case.
+service UserUserService {
+  rpc GetUserByID(GetUserByIDRequest) returns (User);
+  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
+}
+
+// Reachable by another process, identified by its mTLS certificate: what the authentication
+// service does on behalf of a caller who has no token yet. Never open GetUserByEmail to a person —
+// it would let anyone confirm which addresses have accounts.
+service UserInternalService {
   rpc GetUserByID(GetUserByIDRequest) returns (User);
   rpc GetUserByEmail(GetUserByEmailRequest) returns (User);
-  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
   rpc CreateUser(CreateUserRequest) returns (User);
 }
