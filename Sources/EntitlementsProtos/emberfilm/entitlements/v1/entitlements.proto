@@ -5,13 +5,28 @@ package emberfilm.entitlements.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-service EntitlementService {
+// One service per kind of caller, so that a server applies its authentication per audience: the
+// bearer-token interceptor on the user service, the peer-certificate interceptor on the internal
+// service. Which service an RPC belongs to says what it needs from the caller before the request
+// is read.
+
+// Reachable by a signed-in user. The first five act on the caller's own account and name it —
+// user_id must be the caller's. The last three are an administrator's, decided in the use case.
+service EntitlementUserService {
   rpc ClaimEntitlement(ClaimEntitlementRequest) returns (Entitlement);
-  rpc GetEntitlementBySourceID(GetEntitlementBySourceIDRequest) returns (Entitlement);
   rpc ListEntitlements(ListEntitlementsRequest) returns (ListEntitlementsResponse);
   rpc ListEntitlementDevices(ListEntitlementDevicesRequest) returns (ListEntitlementDevicesResponse);
   rpc UnenrollDevice(UnenrollDeviceRequest) returns (google.protobuf.Empty);
   rpc DeleteDevice(DeleteDeviceRequest) returns (google.protobuf.Empty);
+  rpc GetEntitlementBySourceID(GetEntitlementBySourceIDRequest) returns (Entitlement);
+  rpc UpsertEntitlement(UpsertEntitlementRequest) returns (Entitlement);
+  rpc DeleteEntitlement(DeleteEntitlementRequest) returns (google.protobuf.Empty);
+}
+
+// Reachable by another process, identified by its mTLS certificate: what billing does when a
+// purchase completes or a subscription lapses.
+service EntitlementInternalService {
+  rpc GetEntitlementBySourceID(GetEntitlementBySourceIDRequest) returns (Entitlement);
   rpc UpsertEntitlement(UpsertEntitlementRequest) returns (Entitlement);
   rpc DeleteEntitlement(DeleteEntitlementRequest) returns (google.protobuf.Empty);
 }
