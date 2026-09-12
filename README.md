@@ -11,9 +11,9 @@ One library product per service, each generating messages, a client, and a serve
 
 | Product | Package | Services |
 | --- | --- | --- |
-| `AuthenticationProtos` | `emberfilm.authentication.v1` | `AuthenticationService`, `RegistrationService` |
-| `BillingProtos` | `emberfilm.billing.v1` | `PackageService`, `BillingService`, `ReconciliationService` |
-| `EntitlementsProtos` | `emberfilm.entitlements.v1` | `EntitlementService` |
+| `AuthenticationProtos` | `emberfilm.authentication.v1` | `AuthenticationPublicService`, `AuthenticationService` |
+| `BillingProtos` | `emberfilm.billing.v1` | `PackagePublicService`, `PackageService`, `BillingPublicService`, `BillingService` |
+| `EntitlementsProtos` | `emberfilm.entitlements.v1` | `EntitlementService`, `EntitlementInternalService` |
 | `NewsletterProtos` | `emberfilm.newsletter.v1` | `SubscriberService` |
 | `UsersProtos` | `emberfilm.users.v1` | `UserService` |
 
@@ -56,8 +56,9 @@ A service links only the contracts it speaks: its own to serve, and each upstrea
 - Dates are `google.protobuf.Timestamp` fields named as nouns: `creation_date`, `update_date`,
   `expiration_date`.
 - Enums start with an `_UNSPECIFIED` zero value that consumers refuse rather than default.
-- Where a service has two audiences, it has two gRPC services in the same file — the caller-facing
-  one and a worker-facing one such as `RegistrationService` or `ReconciliationService`.
+- A contract is split by audience, one gRPC service per audience in the same file: a
+  `<Entity>PublicService` that takes no credential, an `<Entity>Service` for a signed-in user, and
+  an `<Entity>InternalService` for a process proving itself by certificate.
 
 ## Releasing
 
