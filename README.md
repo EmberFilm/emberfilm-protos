@@ -14,8 +14,8 @@ One library product per service, each generating messages, a client, and a serve
 | `AuthenticationProtos` | `emberfilm.authentication.v1` | `AuthenticationPublicService`, `AuthenticationService` |
 | `BillingProtos` | `emberfilm.billing.v1` | `PackagePublicService`, `PackageService`, `BillingPublicService`, `BillingService` |
 | `EntitlementsProtos` | `emberfilm.entitlements.v1` | `EntitlementService`, `EntitlementInternalService` |
-| `NewsletterProtos` | `emberfilm.newsletter.v1` | `SubscriberService` |
-| `UsersProtos` | `emberfilm.users.v1` | `UserService` |
+| `NewsletterProtos` | `emberfilm.newsletter.v1` | `SubscriberPublicService`, `SubscriberService` |
+| `UsersProtos` | `emberfilm.users.v1` | `UserService`, `UserInternalService` |
 
 Files are nested by organization, service, and version —
 `Sources/<Service>Protos/emberfilm/<service>/v1/<service>.proto` — and the `package` declaration
